@@ -39,9 +39,15 @@ updated: 2026-10-19T20:00:00+05:30
 ---
 
 ### Phase 2: Bank Accounts and Balances
-**Status:** ⬜ Not Started
+**Status:** ✅ Complete
 **Objective:** Support multiple bank accounts, cash/wallet tracking, opening vs tracked balance, account color picking, adjustments, and reconciliation.
 **Depends on:** Phase 1
+
+**Plans:**
+- [x] Plan 2.1: Server actions for accounts & balance adjustments with AuditLog records
+- [x] Plan 2.2: Modal dialogs (CreateAccountDialog, AdjustBalanceDialog, EditAccountDialog)
+- [x] Plan 2.3: Accounts overview page (`/accounts`) with funds distribution bar & active/archived sections
+- [x] Plan 2.4: Dashboard accounts integration with live balance queries
 
 ---
 

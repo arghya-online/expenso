@@ -28,6 +28,14 @@ export default async function DashboardPage() {
   let totalExpenseInPaise = 0;
   let accountsCount = 0;
   let recentTransactionsCount = 0;
+  let userAccounts: Array<{
+    _id: { toString(): string };
+    name: string;
+    accountType: string;
+    accountColor: string;
+    maskedIdentifier?: string;
+    currentBalanceInPaise: number;
+  }> = [];
 
   try {
     await connectToDatabase();
@@ -36,8 +44,16 @@ export default async function DashboardPage() {
       const accounts = await BankAccount.find({
         userId: user.id,
         status: "active",
-      }).lean();
+      }).sort({ currentBalanceInPaise: -1 }).lean();
 
+      userAccounts = accounts.map((acc) => ({
+        _id: acc._id,
+        name: acc.name,
+        accountType: acc.accountType,
+        accountColor: acc.accountColor,
+        maskedIdentifier: acc.maskedIdentifier,
+        currentBalanceInPaise: acc.currentBalanceInPaise,
+      }));
       accountsCount = accounts.length;
       totalBalanceInPaise = accounts.reduce(
         (acc, curr) => acc + (curr.currentBalanceInPaise || 0),
@@ -211,8 +227,44 @@ export default async function DashboardPage() {
                 </Link>
               </div>
             ) : (
-              <div className="space-y-3">
-                {/* Populated in Phase 2 */}
+              <div className="space-y-2.5">
+                {userAccounts.slice(0, 4).map((acc) => (
+                  <div
+                    key={acc._id.toString()}
+                    className="flex items-center justify-between p-2.5 rounded-lg border border-[#E2E8F0] bg-[#F8FAFC]/50 hover:bg-[#F8FAFC] transition-colors"
+                  >
+                    <div className="flex items-center gap-2.5 min-w-0">
+                      <span
+                        className="size-3 rounded-full shrink-0 shadow-2xs"
+                        style={{ backgroundColor: acc.accountColor }}
+                      />
+                      <div className="min-w-0">
+                        <span className="text-xs font-semibold text-[#0F172A] block truncate">
+                          {acc.name}
+                        </span>
+                        <span className="text-[10px] text-[#64748B] capitalize block truncate">
+                          {acc.accountType} {acc.maskedIdentifier ? `• ${acc.maskedIdentifier}` : ""}
+                        </span>
+                      </div>
+                    </div>
+                    <div className="text-right shrink-0">
+                      <span className="text-xs font-bold text-[#0F172A] block">
+                        {formatINR(acc.currentBalanceInPaise)}
+                      </span>
+                    </div>
+                  </div>
+                ))}
+
+                {userAccounts.length > 4 && (
+                  <div className="text-center pt-1">
+                    <Link
+                      href="/accounts"
+                      className="text-xs text-[#0F766E] font-medium hover:underline"
+                    >
+                      + {userAccounts.length - 4} more accounts
+                    </Link>
+                  </div>
+                )}
               </div>
             )}
           </CardContent>
