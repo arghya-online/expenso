@@ -1,5 +1,5 @@
 ---
-updated: 2026-10-19T20:50:00+05:30
+updated: 2026-10-19T21:00:00+05:30
 ---
 
 # Project State
@@ -7,47 +7,41 @@ updated: 2026-10-19T20:50:00+05:30
 ## Current Position
 
 **Milestone:** v1.0 — Expenso MVP  
-**Phase:** 2 - Bank Accounts and Balances (Completed)  
-**Status:** Ready for Phase 3 (Transactions, Expenses, and Income)  
-**Plan:** Phase 2 complete; Phase 3 planning next
+**Phase:** 3 - Transactions, Expenses, and Income (Completed)  
+**Status:** Ready for Phase 4 (Dashboard and Financial Insights)  
+**Plan:** Phase 3 complete; Phase 4 planning next
 
 ## Last Action
 
-Implemented and empirically verified Phase 2 (Bank Accounts and Balances):
-- Created account constants ([`ACCOUNT_COLORS`](file:///s:/Programming%20Base/Expenso/expenso/lib/constants/accounts.ts), [`ACCOUNT_TYPES`](file:///s:/Programming%20Base/Expenso/expenso/lib/constants/accounts.ts)).
-- Created server actions in [`expenso/lib/actions/accounts.ts`](file:///s:/Programming%20Base/Expenso/expenso/lib/actions/accounts.ts):
-  - `createAccount`: Creates account with user ownership, validates with Zod, and creates initial `AuditLog`.
-  - `updateAccount`: Updates account name, type, color, nickname, masked identifier, and notes with `AuditLog`.
-  - `adjustBalance`: Supports Deposits, Withdrawals, and direct Reconciliation with integer paise precision and `AuditLog` entries.
-  - `toggleArchiveAccount`: Soft-archives or restores accounts.
-- Built dialog components in [`expenso/components/accounts/`](file:///s:/Programming%20Base/Expenso/expenso/components/accounts/):
-  - `CreateAccountDialog`: Clean modal with color picker, account type selection, initial balance, and optional tags.
-  - `AdjustBalanceDialog`: Modal allowing users to Add Money, Withdraw, or Reconcile with purpose/notes and live balance preview.
-  - `EditAccountDialog`: Modal for updating nickname, color, and account metadata.
-  - `AccountCard`: Compact, professional card with custom account color indicator, masked identifier, opening balance note, balance adjustment button, and archive/edit dropdown.
-- Created dedicated Bank Accounts page at [`expenso/app/(dashboard)/accounts/page.tsx`](file:///s:/Programming%20Base/Expenso/expenso/app/%28dashboard%29/accounts/page.tsx) with Total Tracked Balance, Active/Archived counts, Funds Distribution proportional color bar, and manual tracking security notice.
-- Integrated account previews into [`expenso/app/(dashboard)/dashboard/page.tsx`](file:///s:/Programming%20Base/Expenso/expenso/app/%28dashboard%29/dashboard/page.tsx).
+Implemented and empirically verified Phase 3 (Transactions, Expenses, and Income):
+- Created Category & Payment Method definitions ([`EXPENSE_CATEGORIES`](file:///s:/Programming%20Base/Expenso/expenso/lib/constants/categories.ts), [`INCOME_CATEGORIES`](file:///s:/Programming%20Base/Expenso/expenso/lib/constants/categories.ts), [`PAYMENT_METHODS`](file:///s:/Programming%20Base/Expenso/expenso/lib/constants/categories.ts)).
+- Created Transaction server actions in [`expenso/lib/actions/transactions.ts`](file:///s:/Programming%20Base/Expenso/expenso/lib/actions/transactions.ts):
+  - `createTransaction`: Handles Incomes, Expenses, and inter-account Transfers with integer paise precision, atomic balance mutations on source & destination accounts, and immutable `AuditLog` records.
+  - `deleteTransaction`: Removes transaction and atomically rolls back the balance impacts on source (and destination for transfers) accounts, logging to `AuditLog`.
+- Created Transaction UI components in [`expenso/components/transactions/`](file:///s:/Programming%20Base/Expenso/expenso/components/transactions/):
+  - `CreateTransactionDialog`: Modal with tabbed selection for Expense (Rose), Income (Emerald), and Transfer (Teal), account pickers, date picker, category dropdown, payment method, amount in INR, and notes.
+  - `TransactionList`: Searchable and filterable transaction table with live search by description/merchant/category, filter by type (Expense, Income, Transfer), filter by Account, and secure delete action.
+- Built dedicated Transactions ledger page at [`expenso/app/(dashboard)/transactions/page.tsx`](file:///s:/Programming%20Base/Expenso/expenso/app/%28dashboard%29/transactions/page.tsx) with Monthly Expense, Monthly Income, Net Flow, and Total Count metric cards.
+- Integrated Recent Activity and transaction recording into [`expenso/app/(dashboard)/dashboard/page.tsx`](file:///s:/Programming%20Base/Expenso/expenso/app/%28dashboard%29/dashboard/page.tsx).
 - Validated with Next.js 16 build (`npm run build`) and ESLint (`npm run lint`) — 100% clean.
 
 ## Next Steps
 
-1. Commit Phase 2 work with atomic commit.
-2. Begin **Phase 3: Transactions, Expenses, and Income**:
-   - Transaction schema & categories (food, transport, shopping, bills, education, health, entertainment, salary, freelance, etc.).
-   - Transaction CRUD server actions (incomes, expenses, and linked transfers).
-   - Balance mutation engine (debit source on expense, credit source on income, transfer debit/credit without double counting).
-   - Filterable & searchable transaction list view with date ranges, accounts, categories, and pagination.
+1. Commit Phase 3 work with atomic commit.
+2. Begin **Phase 4: Dashboard and Financial Insights**:
+   - Monthly and date-range cashflow analytics.
+   - Category breakdown charts (accessible, clean visual distribution of expenses).
+   - Spending trends comparison (daily/weekly/monthly).
+   - Quick date-range selector (This Month, Last Month, Last 90 Days, All Time).
 
 ## Active Decisions
 
 | Decision | Choice | Made | Affects |
 |----------|--------|------|---------|
 | Currency & Precision | Integer paise (`amountInPaise`) | 2026-10-19 | All models, calculations, UI |
+| Transfers | Debits source, credits destination; zero impact on income/expense | 2026-10-19 | Ledger & reporting |
 | Auth Engine | Better Auth with MongoDB adapter | 2026-10-19 | Auth routes, middleware, session |
-| Navigation Pattern | Persistent desktop sidebar + mobile bottom nav | 2026-10-19 | App Shell layout |
-| Design Language | Razorpay-inspired minimal, high-clarity dashboard | 2026-10-19 | CSS tokens, cards, typography |
-| Route Caching | Next.js 16 `instant = false` for authenticated routes | 2026-10-19 | App routes & prerender rules |
-| Audit Trail | Immutable `AuditLog` for balance adjustments & reconciliations | 2026-10-19 | Account balances & transactions |
+| Audit Trail | Immutable `AuditLog` for balance adjustments & transaction reversals | 2026-10-19 | Account balances & transactions |
 
 ## Blockers
 

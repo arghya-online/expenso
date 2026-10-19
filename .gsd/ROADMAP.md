@@ -52,9 +52,16 @@ updated: 2026-10-19T20:00:00+05:30
 ---
 
 ### Phase 3: Transactions, Expenses, and Income
-**Status:** ⬜ Not Started
+**Status:** ✅ Complete
 **Objective:** Complete manual transaction management, categories, income/expense recording, internal account transfers, and ledger balance updates.
 **Depends on:** Phase 2
+
+**Plans:**
+- [x] Plan 3.1: Transaction categories and payment methods constants
+- [x] Plan 3.2: Transaction server actions (create, delete with balance reversal and audit logs)
+- [x] Plan 3.3: CreateTransactionDialog with income/expense/transfer tabs & account selection
+- [x] Plan 3.4: Interactive TransactionList with search, type/account filters, and delete action
+- [x] Plan 3.5: Transactions management page (`/transactions`) with KPI cards & dashboard integration
 
 ---
 

@@ -16,6 +16,7 @@ import {
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
 import Link from "next/link";
+import { CreateTransactionDialog } from "@/components/transactions/CreateTransactionDialog";
 
 export const instant = false;
 
@@ -27,7 +28,6 @@ export default async function DashboardPage() {
   let totalIncomeInPaise = 0;
   let totalExpenseInPaise = 0;
   let accountsCount = 0;
-  let recentTransactionsCount = 0;
   let userAccounts: Array<{
     _id: { toString(): string };
     name: string;
@@ -35,6 +35,17 @@ export default async function DashboardPage() {
     accountColor: string;
     maskedIdentifier?: string;
     currentBalanceInPaise: number;
+  }> = [];
+  let recentTransactions: Array<{
+    _id: string;
+    type: "income" | "expense" | "transfer";
+    amountInPaise: number;
+    date: string;
+    category: string;
+    description: string;
+    accountName: string;
+    accountColor: string;
+    destName?: string;
   }> = [];
 
   try {
@@ -70,8 +81,6 @@ export default async function DashboardPage() {
         date: { $gte: startOfMonth },
       }).lean();
 
-      recentTransactionsCount = monthlyTransactions.length;
-
       for (const t of monthlyTransactions) {
         if (t.type === "income") {
           totalIncomeInPaise += t.amountInPaise || 0;
@@ -79,12 +88,48 @@ export default async function DashboardPage() {
           totalExpenseInPaise += t.amountInPaise || 0;
         }
       }
+
+      // Query recent transactions
+      const recentDocs = await Transaction.find({ userId: user.id })
+        .populate("accountId", "name accountColor")
+        .populate("destinationAccountId", "name accountColor")
+        .sort({ date: -1, createdAt: -1 })
+        .limit(5)
+        .lean();
+
+      recentTransactions = (recentDocs as Array<{
+        _id: { toString(): string };
+        type: "income" | "expense" | "transfer";
+        amountInPaise: number;
+        date: Date;
+        category: string;
+        description: string;
+        accountId?: { name?: string; accountColor?: string };
+        destinationAccountId?: { name?: string };
+      }>).map((tx) => ({
+        _id: tx._id.toString(),
+        type: tx.type,
+        amountInPaise: tx.amountInPaise,
+        date: tx.date.toISOString(),
+        category: tx.category,
+        description: tx.description,
+        accountName: tx.accountId?.name || "Account",
+        accountColor: tx.accountId?.accountColor || "#0F766E",
+        destName: tx.destinationAccountId?.name,
+      }));
     }
   } catch (err) {
     console.error("Dashboard data fetch error:", err);
   }
 
   const netCashFlowInPaise = totalIncomeInPaise - totalExpenseInPaise;
+
+  const selectableAccounts = userAccounts.map((a) => ({
+    _id: a._id.toString(),
+    name: a.name,
+    accountColor: a.accountColor,
+    currentBalanceInPaise: a.currentBalanceInPaise,
+  }));
 
   return (
     <div className="space-y-6">
@@ -99,12 +144,16 @@ export default async function DashboardPage() {
           </p>
         </div>
         <div className="flex items-center gap-2">
-          <Link href="/transactions">
-            <Button size="sm" className="bg-[#0F766E] hover:bg-[#0d655e] text-white gap-1.5 h-9">
-              <Plus className="size-4" />
-              <span>Record Transaction</span>
-            </Button>
-          </Link>
+          {selectableAccounts.length > 0 ? (
+            <CreateTransactionDialog accounts={selectableAccounts} />
+          ) : (
+            <Link href="/accounts">
+              <Button size="sm" className="bg-[#0F766E] hover:bg-[#0d655e] text-white gap-1.5 h-9">
+                <Plus className="size-4" />
+                <span>Record Transaction</span>
+              </Button>
+            </Link>
+          )}
           <Link href="/accounts">
             <Button size="sm" variant="outline" className="border-[#E2E8F0] text-[#0F172A] gap-1.5 h-9">
               <Landmark className="size-4" />
@@ -286,7 +335,7 @@ export default async function DashboardPage() {
             </Link>
           </CardHeader>
           <CardContent>
-            {recentTransactionsCount === 0 ? (
+            {recentTransactions.length === 0 ? (
               <div className="p-8 text-center rounded-lg border border-dashed border-[#E2E8F0] bg-[#F8FAFC]">
                 <ArrowLeftRight className="size-8 mx-auto text-[#64748B] mb-2 stroke-1" />
                 <h4 className="text-xs font-semibold text-[#0F172A]">No transactions recorded yet</h4>
@@ -301,7 +350,64 @@ export default async function DashboardPage() {
               </div>
             ) : (
               <div className="space-y-2">
-                {/* Populated in Phase 3 */}
+                {recentTransactions.map((tx) => {
+                  const isIncome = tx.type === "income";
+                  const isExpense = tx.type === "expense";
+                  const formattedDate = new Intl.DateTimeFormat("en-IN", {
+                    day: "numeric",
+                    month: "short",
+                  }).format(new Date(tx.date));
+
+                  return (
+                    <div
+                      key={tx._id}
+                      className="flex items-center justify-between p-2.5 rounded-lg border border-[#E2E8F0] bg-[#F8FAFC]/50 hover:bg-[#F8FAFC] transition-colors"
+                    >
+                      <div className="flex items-center gap-2.5 min-w-0">
+                        <div
+                          className={`size-7 rounded-md flex items-center justify-center shrink-0 ${
+                            isIncome
+                              ? "bg-emerald-50 text-[#16A34A]"
+                              : isExpense
+                              ? "bg-rose-50 text-[#E11D48]"
+                              : "bg-[#CCFBF1] text-[#0F766E]"
+                          }`}
+                        >
+                          {isIncome && <ArrowDownLeft className="size-3.5" />}
+                          {isExpense && <ArrowUpRight className="size-3.5" />}
+                          {!isIncome && !isExpense && <ArrowLeftRight className="size-3.5" />}
+                        </div>
+                        <div className="min-w-0">
+                          <span className="text-xs font-semibold text-[#0F172A] block truncate">
+                            {tx.description}
+                          </span>
+                          <span className="text-[10px] text-[#64748B] block truncate">
+                            {formattedDate} • {tx.category} • {tx.accountName}
+                            {tx.destName ? ` → ${tx.destName}` : ""}
+                          </span>
+                        </div>
+                      </div>
+
+                      <div className="text-right shrink-0">
+                        <span
+                          className={`text-xs font-bold block ${
+                            isIncome
+                              ? "text-[#16A34A]"
+                              : isExpense
+                              ? "text-[#E11D48]"
+                              : "text-[#0F766E]"
+                          }`}
+                        >
+                          {isIncome
+                            ? `+${formatINR(tx.amountInPaise)}`
+                            : isExpense
+                            ? `-${formatINR(tx.amountInPaise)}`
+                            : formatINR(tx.amountInPaise)}
+                        </span>
+                      </div>
+                    </div>
+                  );
+                })}
               </div>
             )}
           </CardContent>
