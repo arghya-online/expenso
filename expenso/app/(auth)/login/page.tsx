@@ -4,16 +4,27 @@ import { useState } from "react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { signIn } from "@/lib/auth/client";
-import { Wallet, Loader2, ArrowRight, AlertCircle } from "lucide-react";
+import { motion, AnimatePresence } from "motion/react";
+import {
+  Wallet,
+  Loader2,
+  ArrowRight,
+  AlertCircle,
+  Mail,
+  Lock,
+  Eye,
+  EyeOff,
+  Sparkles,
+} from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
-import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from "@/components/ui/card";
 
 export default function LoginPage() {
   const router = useRouter();
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
+  const [showPassword, setShowPassword] = useState(false);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
@@ -37,39 +48,87 @@ export default function LoginPage() {
       router.push("/dashboard");
       router.refresh();
     } catch (err: unknown) {
-      const message = err instanceof Error ? err.message : "An unexpected error occurred";
+      const message =
+        err instanceof Error ? err.message : "An unexpected error occurred";
       setError(message);
       setLoading(false);
     }
   };
 
+  const handleFillDemo = () => {
+    setEmail("demo@expenso.com");
+    setPassword("DemoPass123!");
+    setError(null);
+  };
+
   return (
-    <Card className="border-[#E2E8F0] shadow-sm bg-white">
-      <CardHeader className="space-y-2 text-center pb-6">
-        <div className="size-12 rounded-xl bg-[#0F766E] text-white flex items-center justify-center mx-auto mb-2 shadow-xs">
-          <Wallet className="size-6" />
+    <motion.div
+      initial={{ opacity: 0, y: 24, scale: 0.98 }}
+      animate={{ opacity: 1, y: 0, scale: 1 }}
+      transition={{ duration: 0.5, ease: "easeOut" }}
+      className="relative rounded-3xl bg-slate-900/70 backdrop-blur-2xl border border-white/[0.12] p-7 sm:p-9 shadow-[0_25px_60px_-15px_rgba(0,0,0,0.7)] overflow-hidden"
+    >
+      {/* Top illuminated accent line */}
+      <div className="absolute top-0 inset-x-0 h-[1.5px] bg-gradient-to-r from-transparent via-[#2DD4BF] to-transparent opacity-80" />
+
+      {/* Header section with brand mark */}
+      <div className="text-center space-y-2 pb-6">
+        <motion.div
+          whileHover={{ scale: 1.05, rotate: 3 }}
+          whileTap={{ scale: 0.95 }}
+          className="size-14 rounded-2xl bg-gradient-to-tr from-[#0F766E] to-[#2DD4BF] text-white flex items-center justify-center mx-auto mb-3 shadow-lg shadow-[#0F766E]/40 border border-white/20"
+        >
+          <Wallet className="size-7" />
+        </motion.div>
+
+        <h1 className="text-2xl font-extrabold tracking-tight text-white">
+          Welcome to Expenso
+        </h1>
+        <p className="text-xs text-slate-400 max-w-xs mx-auto">
+          Sign in to access your multi-account ledger, investments, and personal debt positions.
+        </p>
+
+        {/* Auth mode toggle tabs */}
+        <div className="flex items-center justify-center gap-1.5 p-1 bg-white/[0.05] rounded-xl max-w-xs mx-auto mt-4 border border-white/[0.06]">
+          <button
+            type="button"
+            className="flex-1 py-1.5 text-xs font-semibold rounded-lg bg-teal-500/20 text-[#2DD4BF] border border-teal-500/30 transition-all shadow-xs"
+          >
+            Sign In
+          </button>
+          <Link
+            href="/register"
+            className="flex-1 py-1.5 text-xs font-semibold rounded-lg text-slate-400 hover:text-white transition-all text-center"
+          >
+            Create Account
+          </Link>
         </div>
-        <CardTitle className="text-xl font-bold tracking-tight text-[#0F172A]">
-          Welcome back to Expenso
-        </CardTitle>
-        <CardDescription className="text-xs text-[#64748B]">
-          Enter your credentials to manage your accounts & transactions
-        </CardDescription>
-      </CardHeader>
+      </div>
 
-      <form onSubmit={handleSubmit}>
-        <CardContent className="space-y-4">
+      {/* Form */}
+      <form onSubmit={handleSubmit} className="space-y-4">
+        {/* Error Alert */}
+        <AnimatePresence>
           {error && (
-            <div className="p-3 rounded-lg bg-rose-50 border border-rose-200 text-rose-700 text-xs flex items-center gap-2">
-              <AlertCircle className="size-4 shrink-0 text-rose-600" />
+            <motion.div
+              initial={{ opacity: 0, height: 0, y: -8 }}
+              animate={{ opacity: 1, height: "auto", y: 0 }}
+              exit={{ opacity: 0, height: 0, y: -8 }}
+              className="p-3 rounded-xl bg-rose-500/10 border border-rose-500/30 text-rose-300 text-xs flex items-center gap-2.5 overflow-hidden"
+            >
+              <AlertCircle className="size-4 shrink-0 text-rose-400" />
               <span>{error}</span>
-            </div>
+            </motion.div>
           )}
+        </AnimatePresence>
 
-          <div className="space-y-1.5">
-            <Label htmlFor="email" className="text-xs font-semibold text-[#0F172A]">
-              Email address
-            </Label>
+        {/* Email Input */}
+        <div className="space-y-1.5">
+          <Label htmlFor="email" className="text-xs font-medium text-slate-300">
+            Email address
+          </Label>
+          <div className="relative">
+            <Mail className="absolute left-3.5 top-1/2 -translate-y-1/2 size-4 text-slate-400 pointer-events-none" />
             <Input
               id="email"
               type="email"
@@ -79,60 +138,84 @@ export default function LoginPage() {
               required
               autoComplete="email"
               disabled={loading}
-              className="h-10 text-sm border-[#E2E8F0] focus-visible:ring-[#0F766E]"
+              className="h-11 pl-10 bg-slate-950/60 border-white/[0.1] text-white placeholder:text-slate-500 rounded-xl text-sm focus-visible:ring-1 focus-visible:ring-[#2DD4BF] focus-visible:border-[#2DD4BF] transition-all"
             />
           </div>
+        </div>
 
-          <div className="space-y-1.5">
-            <div className="flex items-center justify-between">
-              <Label htmlFor="password" className="text-xs font-semibold text-[#0F172A]">
-                Password
-              </Label>
-            </div>
+        {/* Password Input */}
+        <div className="space-y-1.5">
+          <div className="flex items-center justify-between">
+            <Label htmlFor="password" className="text-xs font-medium text-slate-300">
+              Password
+            </Label>
+            <button
+              type="button"
+              onClick={handleFillDemo}
+              className="text-[11px] text-[#2DD4BF] hover:text-[#5EEAD4] flex items-center gap-1 font-medium transition-colors"
+            >
+              <Sparkles className="size-3" />
+              <span>Fill Demo Credentials</span>
+            </button>
+          </div>
+          <div className="relative">
+            <Lock className="absolute left-3.5 top-1/2 -translate-y-1/2 size-4 text-slate-400 pointer-events-none" />
             <Input
               id="password"
-              type="password"
+              type={showPassword ? "text" : "password"}
               placeholder="••••••••"
               value={password}
               onChange={(e) => setPassword(e.target.value)}
               required
               autoComplete="current-password"
               disabled={loading}
-              className="h-10 text-sm border-[#E2E8F0] focus-visible:ring-[#0F766E]"
+              className="h-11 pl-10 pr-10 bg-slate-950/60 border-white/[0.1] text-white placeholder:text-slate-500 rounded-xl text-sm focus-visible:ring-1 focus-visible:ring-[#2DD4BF] focus-visible:border-[#2DD4BF] transition-all"
             />
-          </div>
-        </CardContent>
-
-        <CardFooter className="flex flex-col space-y-4 pt-2">
-          <Button
-            type="submit"
-            disabled={loading}
-            className="w-full h-10 bg-[#0F766E] hover:bg-[#0d655e] text-white font-medium text-sm transition-all"
-          >
-            {loading ? (
-              <>
-                <Loader2 className="size-4 animate-spin mr-2" />
-                Signing in...
-              </>
-            ) : (
-              <>
-                Sign In
-                <ArrowRight className="size-4 ml-2" />
-              </>
-            )}
-          </Button>
-
-          <div className="text-center text-xs text-[#64748B]">
-            Don&apos;t have an account yet?{" "}
-            <Link
-              href="/register"
-              className="text-[#0F766E] font-semibold hover:underline"
+            <button
+              type="button"
+              onClick={() => setShowPassword(!showPassword)}
+              className="absolute right-3.5 top-1/2 -translate-y-1/2 text-slate-400 hover:text-slate-200 transition-colors"
+              tabIndex={-1}
             >
-              Create account
-            </Link>
+              {showPassword ? <EyeOff className="size-4" /> : <Eye className="size-4" />}
+            </button>
           </div>
-        </CardFooter>
+        </div>
+
+        {/* Submit Button */}
+        <div className="pt-2">
+          <motion.div whileHover={{ scale: 1.01 }} whileTap={{ scale: 0.99 }}>
+            <Button
+              type="submit"
+              disabled={loading}
+              className="w-full h-11 bg-gradient-to-r from-[#0F766E] to-[#14B8A6] hover:from-[#115E59] hover:to-[#0F766E] text-white font-semibold text-sm rounded-xl shadow-lg shadow-[#0F766E]/30 border border-teal-400/20 transition-all flex items-center justify-center gap-2 group cursor-pointer"
+            >
+              {loading ? (
+                <>
+                  <Loader2 className="size-4 animate-spin" />
+                  <span>Authenticating...</span>
+                </>
+              ) : (
+                <>
+                  <span>Sign In</span>
+                  <ArrowRight className="size-4 group-hover:translate-x-1 transition-transform" />
+                </>
+              )}
+            </Button>
+          </motion.div>
+        </div>
+
+        {/* Footer Link */}
+        <div className="text-center text-xs text-slate-400 pt-2">
+          Don&apos;t have an account yet?{" "}
+          <Link
+            href="/register"
+            className="text-[#2DD4BF] font-semibold hover:text-[#5EEAD4] transition-colors"
+          >
+            Create an account
+          </Link>
+        </div>
       </form>
-    </Card>
+    </motion.div>
   );
 }
