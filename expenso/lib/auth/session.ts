@@ -1,17 +1,18 @@
+import { cache } from "react";
 import { auth } from "@/lib/auth/server";
 import { headers } from "next/headers";
 
 /**
  * Retrieves the currently authenticated user's session on the server.
- * Returns null if unauthenticated.
+ * Returns null if unauthenticated. Deduplicated per-request via React cache.
  */
-export async function getServerSession() {
+export const getServerSession = cache(async () => {
   const reqHeaders = await headers();
   const session = await auth.api.getSession({
     headers: reqHeaders,
   });
   return session;
-}
+});
 
 /**
  * Requires an authenticated user session.

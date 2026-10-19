@@ -16,7 +16,7 @@ const geistMono = Geist_Mono({
 });
 
 export const metadata: Metadata = {
-  title: "Expenso — Personal Finance & Expense Management",
+  title: "Expenso -Personal Finance & Expense Management",
   description:
     "Clean, professional personal finance management to track multi-account balances, transactions, and investments with precision.",
 };

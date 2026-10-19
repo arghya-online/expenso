@@ -209,7 +209,7 @@ export default async function ReportsPage({ searchParams }: PageProps) {
         <div className="p-4.5 border-b border-[#E2E8F0] flex items-center justify-between">
           <div>
             <h3 className="text-sm font-bold text-[#0F172A]">
-              Monthly Cash Flow Breakdown — {selectedYear}
+              Monthly Cash Flow Breakdown -{selectedYear}
             </h3>
             <p className="text-xs text-[#64748B] mt-0.5">
               Structured month-by-month financial statement.
@@ -294,7 +294,7 @@ export default async function ReportsPage({ searchParams }: PageProps) {
       <div className="bg-white rounded-xl border border-[#E2E8F0] p-4.5 space-y-4 shadow-2xs">
         <div>
           <h3 className="text-sm font-bold text-[#0F172A]">
-            Expense Distribution by Category — {selectedYear}
+            Expense Distribution by Category -{selectedYear}
           </h3>
           <p className="text-xs text-[#64748B] mt-0.5">
             Where your money went across all spending categories.

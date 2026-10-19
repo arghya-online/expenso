@@ -2,7 +2,7 @@
 
 import { useState } from "react";
 import { formatINR } from "@/lib/utils/currency";
-import { toggleArchiveAccount } from "@/lib/actions/accounts";
+import { toggleArchiveAccount, deleteAccount } from "@/lib/actions/accounts";
 import { AdjustBalanceDialog } from "./AdjustBalanceDialog";
 import { EditAccountDialog } from "./EditAccountDialog";
 import {
@@ -12,6 +12,7 @@ import {
   Archive,
   ArchiveRestore,
   ShieldCheck,
+  Trash2,
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
@@ -54,6 +55,24 @@ export function AccountCard({ account }: AccountCardProps) {
     }
   };
 
+  const handleDeleteAccount = async () => {
+    if (
+      confirm(
+        `Are you sure you want to permanently delete "${account.name}"? All associated transactions and balance history will also be cleared.`
+      )
+    ) {
+      setLoading(true);
+      try {
+        await deleteAccount(account._id);
+      } catch (err) {
+        console.error(err);
+        alert(err instanceof Error ? err.message : "Failed to delete account");
+      } finally {
+        setLoading(false);
+      }
+    }
+  };
+
   const isArchived = account.status === "archived";
 
   return (
@@ -92,13 +111,13 @@ export function AccountCard({ account }: AccountCardProps) {
                   </Button>
                 }
               />
-              <DropdownMenuContent align="end" className="w-40 bg-white border-[#E2E8F0]">
+              <DropdownMenuContent align="end" className="w-44 bg-white border-[#E2E8F0]">
                 <DropdownMenuItem
                   onClick={() => setEditOpen(true)}
                   className="text-xs cursor-pointer gap-2"
                 >
                   <Edit2 className="size-3.5" />
-                  <span>Edit Details</span>
+                  <span>Edit & Change Money</span>
                 </DropdownMenuItem>
                 <DropdownMenuSeparator className="bg-[#E2E8F0]" />
                 <DropdownMenuItem
@@ -117,6 +136,15 @@ export function AccountCard({ account }: AccountCardProps) {
                       <span>Archive Account</span>
                     </>
                   )}
+                </DropdownMenuItem>
+                <DropdownMenuSeparator className="bg-[#E2E8F0]" />
+                <DropdownMenuItem
+                  onClick={handleDeleteAccount}
+                  disabled={loading}
+                  className="text-xs cursor-pointer gap-2 text-rose-600 focus:text-rose-700 focus:bg-rose-50"
+                >
+                  <Trash2 className="size-3.5" />
+                  <span>Delete Account</span>
                 </DropdownMenuItem>
               </DropdownMenuContent>
             </DropdownMenu>
@@ -199,6 +227,7 @@ export function AccountCard({ account }: AccountCardProps) {
           accountColor: account.accountColor,
           nickname: account.nickname,
           maskedIdentifier: account.maskedIdentifier,
+          currentBalanceInPaise: account.currentBalanceInPaise,
           notes: account.notes,
         }}
       />

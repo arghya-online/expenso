@@ -25,6 +25,7 @@ export const INCOME_CATEGORIES: CategoryItem[] = [
   { id: "business", name: "Business Revenue", type: "income", iconName: "Building2", color: "#0F766E" },
   { id: "investments", name: "Dividends & Returns", type: "income", iconName: "TrendingUp", color: "#10B981" },
   { id: "interest", name: "Interest Earned", type: "income", iconName: "Percent", color: "#84CC16" },
+  { id: "scholarship", name: "Scholarships & Grants", type: "income", iconName: "GraduationCap", color: "#6366F1" },
   { id: "gifts", name: "Gifts & Grants", type: "income", iconName: "Gift", color: "#EAB308" },
   { id: "other_income", name: "Other Income", type: "income", iconName: "CircleDollarSign", color: "#64748B" },
 ];

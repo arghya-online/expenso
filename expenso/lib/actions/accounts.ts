@@ -5,6 +5,7 @@ import { z } from "zod";
 import { requireAuth } from "@/lib/auth/session";
 import { connectToDatabase } from "@/lib/db/mongoose";
 import { BankAccount } from "@/lib/models/BankAccount";
+import { Transaction } from "@/lib/models/Transaction";
 import { AuditLog } from "@/lib/models/AuditLog";
 import { toPaise } from "@/lib/utils/currency";
 
@@ -25,6 +26,7 @@ const updateAccountSchema = z.object({
   accountColor: z.string().regex(/^#[0-9A-Fa-f]{6}$/, "Invalid color code"),
   nickname: z.string().max(50).optional(),
   maskedIdentifier: z.string().max(20).optional(),
+  currentBalanceRupees: z.number().min(0, "Current balance cannot be negative").optional(),
   notes: z.string().max(500).optional(),
 });
 
@@ -97,6 +99,7 @@ export async function updateAccount(data: z.infer<typeof updateAccountSchema>) {
     accountColor: account.accountColor,
     nickname: account.nickname,
     maskedIdentifier: account.maskedIdentifier,
+    currentBalanceInPaise: account.currentBalanceInPaise,
     notes: account.notes,
   };
 
@@ -106,6 +109,10 @@ export async function updateAccount(data: z.infer<typeof updateAccountSchema>) {
   account.nickname = validated.nickname;
   account.maskedIdentifier = validated.maskedIdentifier;
   account.notes = validated.notes;
+
+  if (validated.currentBalanceRupees !== undefined) {
+    account.currentBalanceInPaise = toPaise(validated.currentBalanceRupees);
+  }
 
   await account.save();
 
@@ -121,9 +128,10 @@ export async function updateAccount(data: z.infer<typeof updateAccountSchema>) {
       accountColor: account.accountColor,
       nickname: account.nickname,
       maskedIdentifier: account.maskedIdentifier,
+      currentBalanceInPaise: account.currentBalanceInPaise,
       notes: account.notes,
     },
-    reason: "Account profile and settings updated",
+    reason: "Account profile and balance updated",
   });
 
   revalidatePath("/dashboard");
@@ -209,3 +217,45 @@ export async function toggleArchiveAccount(accountId: string) {
 
   return { success: true, status: account.status };
 }
+
+export async function deleteAccount(accountId: string) {
+  const session = await requireAuth();
+  await connectToDatabase();
+
+  const account = await BankAccount.findOne({
+    _id: accountId,
+    userId: session.user.id,
+  });
+
+  if (!account) {
+    throw new Error("Account not found or access denied.");
+  }
+
+  // Delete all associated transactions to avoid broken references
+  await Transaction.deleteMany({
+    userId: session.user.id,
+    $or: [{ accountId: account._id }, { destinationAccountId: account._id }],
+  });
+
+  await BankAccount.deleteOne({ _id: account._id });
+
+  await AuditLog.create({
+    userId: session.user.id,
+    entityType: "bank_account",
+    entityId: account._id.toString(),
+    action: "delete",
+    previousState: {
+      name: account.name,
+      currentBalanceInPaise: account.currentBalanceInPaise,
+    },
+    reason: `Permanently deleted account "${account.name}" and cleared associated ledger entries`,
+  });
+
+  revalidatePath("/dashboard");
+  revalidatePath("/accounts");
+  revalidatePath("/transactions");
+  revalidatePath("/reports");
+
+  return { success: true };
+}
+

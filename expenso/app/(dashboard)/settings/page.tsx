@@ -84,7 +84,7 @@ export default async function SettingsPage() {
             <div>
               <span className="font-bold text-[#0F172A] block">Currency Standard</span>
               <span className="text-[#64748B] text-[11px]">
-                Indian Rupee (INR — ₹) with Indian numbering format (₹1,23,456.78)
+                Indian Rupee (INR -₹) with Indian numbering format (₹1,23,456.78)
               </span>
             </div>
             <span className="px-2.5 py-1 bg-teal-50 text-[#0F766E] rounded-md font-bold text-xs">

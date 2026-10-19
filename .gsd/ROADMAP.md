@@ -6,8 +6,8 @@ updated: 2026-10-19T20:00:00+05:30
 
 # Roadmap
 
-> **Current Milestone:** v1.0 — Expenso MVP
-> **Current Milestone:** v1.0 — Expenso MVP  
+> **Current Milestone:** v1.0 -Expenso MVP
+> **Current Milestone:** v1.0 -Expenso MVP  
 > **Current Phase:** Milestone Complete  
 > **Status:** ✅ Complete  
 

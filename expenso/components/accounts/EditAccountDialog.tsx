@@ -3,6 +3,7 @@
 import { useState } from "react";
 import { updateAccount } from "@/lib/actions/accounts";
 import { ACCOUNT_COLORS, ACCOUNT_TYPES } from "@/lib/constants/accounts";
+import { toRupees } from "@/lib/utils/currency";
 import { Check, Loader2 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -26,6 +27,7 @@ interface EditAccountDialogProps {
     accountColor: string;
     nickname?: string;
     maskedIdentifier?: string;
+    currentBalanceInPaise: number;
     notes?: string;
   };
 }
@@ -40,6 +42,9 @@ export function EditAccountDialog({
   const [accountColor, setAccountColor] = useState(account.accountColor);
   const [nickname, setNickname] = useState(account.nickname || "");
   const [maskedIdentifier, setMaskedIdentifier] = useState(account.maskedIdentifier || "");
+  const [currentBalance, setCurrentBalance] = useState(
+    toRupees(account.currentBalanceInPaise).toString()
+  );
   const [notes, setNotes] = useState(account.notes || "");
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
@@ -47,6 +52,13 @@ export function EditAccountDialog({
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     setError(null);
+
+    const parsedBalance = parseFloat(currentBalance);
+    if (isNaN(parsedBalance) || parsedBalance < 0) {
+      setError("Please provide a valid non-negative balance in ₹");
+      return;
+    }
+
     setLoading(true);
 
     try {
@@ -57,6 +69,7 @@ export function EditAccountDialog({
         accountColor,
         nickname: nickname.trim() || undefined,
         maskedIdentifier: maskedIdentifier.trim() || undefined,
+        currentBalanceRupees: parsedBalance,
         notes: notes.trim() || undefined,
       });
 
@@ -121,6 +134,32 @@ export function EditAccountDialog({
                 </option>
               ))}
             </select>
+          </div>
+
+          {/* Current Money Value / Balance */}
+          <div className="space-y-1.5">
+            <Label htmlFor="edit-balance" className="text-xs font-semibold text-[#0F172A]">
+              Current Balance / Money in Account (₹) *
+            </Label>
+            <div className="relative">
+              <span className="absolute left-3 top-1/2 -translate-y-1/2 text-sm text-[#64748B] font-medium">
+                ₹
+              </span>
+              <Input
+                id="edit-balance"
+                type="number"
+                step="0.01"
+                min="0"
+                value={currentBalance}
+                onChange={(e) => setCurrentBalance(e.target.value)}
+                required
+                disabled={loading}
+                className="h-9 pl-7 text-sm font-semibold border-[#E2E8F0] focus-visible:ring-1 focus-visible:ring-[#0F766E]"
+              />
+            </div>
+            <p className="text-[11px] text-[#64748B]">
+              Directly edit the available money amount in this account.
+            </p>
           </div>
 
           {/* Color Picker */}

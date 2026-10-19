@@ -163,7 +163,7 @@ export default function AuthLayout({ children }: { children: ReactNode }) {
         className="mt-8 text-center text-xs text-slate-500 flex items-center gap-2 relative z-10"
       >
         <ShieldCheck className="size-3.5 text-teal-500" />
-        <span>Expenso — Secure, Private & Precision Personal Finance Ledger</span>
+        <span>Expenso -Secure, Private & Precision Personal Finance Ledger</span>
       </motion.div>
     </div>
   );
