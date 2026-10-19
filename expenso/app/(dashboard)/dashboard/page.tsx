@@ -23,6 +23,7 @@ import { CreateTransactionDialog } from "@/components/transactions/CreateTransac
 import { DateRangeSelector } from "@/components/dashboard/DateRangeSelector";
 import { CategoryBreakdown, CategoryStat } from "@/components/dashboard/CategoryBreakdown";
 import { SpendingTrend, TrendPoint } from "@/components/dashboard/SpendingTrend";
+import { QuickAccountBalances } from "@/components/dashboard/QuickAccountBalances";
 
 export const instant = false;
 
@@ -83,6 +84,7 @@ export default async function DashboardPage({ searchParams }: PageProps) {
     accountColor: string;
     maskedIdentifier?: string;
     currentBalanceInPaise: number;
+    isPrimary?: boolean;
   }> = [];
 
   let recentTransactions: Array<{
@@ -103,11 +105,11 @@ export default async function DashboardPage({ searchParams }: PageProps) {
   try {
     await connectToDatabase();
     if (user?.id) {
-      // 1. All Active Bank Accounts
+      // 1. All Active Bank Accounts (Primary first, then highest balance)
       const accounts = await BankAccount.find({
         userId: user.id,
         status: "active",
-      }).sort({ currentBalanceInPaise: -1 }).lean();
+      }).sort({ isPrimary: -1, currentBalanceInPaise: -1 }).lean();
 
       userAccounts = accounts.map((acc) => ({
         _id: acc._id,
@@ -116,6 +118,7 @@ export default async function DashboardPage({ searchParams }: PageProps) {
         accountColor: acc.accountColor,
         maskedIdentifier: acc.maskedIdentifier,
         currentBalanceInPaise: acc.currentBalanceInPaise,
+        isPrimary: !!acc.isPrimary,
       }));
 
       accountsCount = accounts.length;
@@ -252,6 +255,16 @@ export default async function DashboardPage({ searchParams }: PageProps) {
     currentBalanceInPaise: a.currentBalanceInPaise,
   }));
 
+  const quickAccounts = userAccounts.map((a) => ({
+    _id: a._id.toString(),
+    name: a.name,
+    accountType: a.accountType,
+    accountColor: a.accountColor,
+    maskedIdentifier: a.maskedIdentifier,
+    currentBalanceInPaise: a.currentBalanceInPaise,
+    isPrimary: a.isPrimary,
+  }));
+
   return (
     <div className="space-y-6">
       {/* Welcome Banner & Controls */}
@@ -331,6 +344,12 @@ export default async function DashboardPage({ searchParams }: PageProps) {
           </Link>
         </div>
       </div>
+
+      {/* Primary & Secondary Account Balances with Privacy Show/Hide & Bottom Total */}
+      <QuickAccountBalances
+        accounts={quickAccounts}
+        totalBalanceInPaise={totalBalanceInPaise}
+      />
 
       {/* Primary KPI Metrics Grid */}
       <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">

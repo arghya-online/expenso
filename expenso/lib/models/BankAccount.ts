@@ -12,6 +12,7 @@ export interface IBankAccount extends Document {
   maskedIdentifier?: string;
   openingBalanceInPaise: number;
   currentBalanceInPaise: number;
+  isPrimary?: boolean;
   notes?: string;
   status: AccountStatus;
   createdAt: Date;
@@ -49,6 +50,7 @@ const BankAccountSchema = new Schema<IBankAccount>(
         message: "Current balance must be an integer (in paise)",
       },
     },
+    isPrimary: { type: Boolean, default: false },
     notes: { type: String, trim: true, maxlength: 500 },
     status: {
       type: String,

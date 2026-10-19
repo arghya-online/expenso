@@ -193,6 +193,7 @@ export default async function AccountsPage() {
                   maskedIdentifier: account.maskedIdentifier,
                   openingBalanceInPaise: account.openingBalanceInPaise,
                   currentBalanceInPaise: account.currentBalanceInPaise,
+                  isPrimary: !!account.isPrimary,
                   status: account.status,
                   notes: account.notes,
                 }}

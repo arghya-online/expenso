@@ -259,3 +259,40 @@ export async function deleteAccount(accountId: string) {
   return { success: true };
 }
 
+export async function setPrimaryAccount(accountId: string) {
+  const session = await requireAuth();
+  await connectToDatabase();
+
+  const account = await BankAccount.findOne({
+    _id: accountId,
+    userId: session.user.id,
+  });
+
+  if (!account) {
+    throw new Error("Account not found or access denied.");
+  }
+
+  // Clear isPrimary from all accounts of this user
+  await BankAccount.updateMany(
+    { userId: session.user.id },
+    { $set: { isPrimary: false } }
+  );
+
+  account.isPrimary = true;
+  await account.save();
+
+  await AuditLog.create({
+    userId: session.user.id,
+    entityType: "bank_account",
+    entityId: account._id.toString(),
+    action: "update",
+    newState: { isPrimary: true },
+    reason: `Designated "${account.name}" as Primary Account`,
+  });
+
+  revalidatePath("/dashboard");
+  revalidatePath("/accounts");
+
+  return { success: true };
+}
+

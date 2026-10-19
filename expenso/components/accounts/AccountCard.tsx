@@ -2,7 +2,7 @@
 
 import { useState } from "react";
 import { formatINR } from "@/lib/utils/currency";
-import { toggleArchiveAccount, deleteAccount } from "@/lib/actions/accounts";
+import { toggleArchiveAccount, deleteAccount, setPrimaryAccount } from "@/lib/actions/accounts";
 import { AdjustBalanceDialog } from "./AdjustBalanceDialog";
 import { EditAccountDialog } from "./EditAccountDialog";
 import {
@@ -13,6 +13,7 @@ import {
   ArchiveRestore,
   ShieldCheck,
   Trash2,
+  Star,
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
@@ -34,6 +35,7 @@ interface AccountCardProps {
     maskedIdentifier?: string;
     openingBalanceInPaise: number;
     currentBalanceInPaise: number;
+    isPrimary?: boolean;
     status: "active" | "archived";
     notes?: string;
   };
@@ -50,6 +52,18 @@ export function AccountCard({ account }: AccountCardProps) {
       await toggleArchiveAccount(account._id);
     } catch (err) {
       console.error(err);
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const handleSetPrimary = async () => {
+    setLoading(true);
+    try {
+      await setPrimaryAccount(account._id);
+    } catch (err) {
+      console.error(err);
+      alert(err instanceof Error ? err.message : "Failed to set as primary account");
     } finally {
       setLoading(false);
     }
@@ -78,7 +92,9 @@ export function AccountCard({ account }: AccountCardProps) {
   return (
     <>
       <div
-        className={`relative bg-white rounded-xl border border-[#E2E8F0] p-5 shadow-2xs transition-all hover:shadow-xs flex flex-col justify-between ${
+        className={`relative bg-white rounded-xl border ${
+          account.isPrimary ? "border-teal-500/60 shadow-xs" : "border-[#E2E8F0]"
+        } p-5 shadow-2xs transition-all hover:shadow-xs flex flex-col justify-between ${
           isArchived ? "opacity-60 bg-slate-50/50" : ""
         }`}
       >
@@ -91,9 +107,16 @@ export function AccountCard({ account }: AccountCardProps) {
                 style={{ backgroundColor: account.accountColor }}
               />
               <div className="min-w-0">
-                <h3 className="font-semibold text-sm text-[#0F172A] truncate">
-                  {account.name}
-                </h3>
+                <div className="flex items-center gap-1.5 flex-wrap">
+                  <h3 className="font-semibold text-sm text-[#0F172A] truncate">
+                    {account.name}
+                  </h3>
+                  {account.isPrimary && (
+                    <Badge className="bg-teal-50 text-[#0F766E] border-teal-200 text-[10px] font-semibold px-1.5 py-0">
+                      ★ Primary
+                    </Badge>
+                  )}
+                </div>
                 {account.nickname && (
                   <span className="text-[11px] text-[#64748B] block truncate">
                     {account.nickname}
@@ -111,7 +134,20 @@ export function AccountCard({ account }: AccountCardProps) {
                   </Button>
                 }
               />
-              <DropdownMenuContent align="end" className="w-44 bg-white border-[#E2E8F0]">
+              <DropdownMenuContent align="end" className="w-48 bg-white border-[#E2E8F0]">
+                {!account.isPrimary && !isArchived && (
+                  <>
+                    <DropdownMenuItem
+                      onClick={handleSetPrimary}
+                      disabled={loading}
+                      className="text-xs cursor-pointer gap-2 text-teal-700 font-medium"
+                    >
+                      <Star className="size-3.5 text-teal-600 fill-teal-100" />
+                      <span>Set as Primary Account</span>
+                    </DropdownMenuItem>
+                    <DropdownMenuSeparator className="bg-[#E2E8F0]" />
+                  </>
+                )}
                 <DropdownMenuItem
                   onClick={() => setEditOpen(true)}
                   className="text-xs cursor-pointer gap-2"
