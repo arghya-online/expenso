@@ -2,6 +2,8 @@ import { getServerSession } from "@/lib/auth/session";
 import { connectToDatabase } from "@/lib/db/mongoose";
 import { BankAccount } from "@/lib/models/BankAccount";
 import { Transaction } from "@/lib/models/Transaction";
+import { Investment } from "@/lib/models/Investment";
+import { LoanDebt } from "@/lib/models/LoanDebt";
 import { formatINR } from "@/lib/utils/currency";
 import {
   Wallet,
@@ -12,6 +14,7 @@ import {
   Landmark,
   ArrowLeftRight,
   ShieldAlert,
+  Scale,
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
@@ -70,6 +73,9 @@ export default async function DashboardPage({ searchParams }: PageProps) {
   let periodIncomeInPaise = 0;
   let periodExpenseInPaise = 0;
   let accountsCount = 0;
+  let totalInvestmentsInPaise = 0;
+  let totalLentInPaise = 0;
+  let totalBorrowedInPaise = 0;
   let userAccounts: Array<{
     _id: { toString(): string };
     name: string;
@@ -198,12 +204,33 @@ export default async function DashboardPage({ searchParams }: PageProps) {
         accountColor: tx.accountId?.accountColor || "#0F766E",
         destName: tx.destinationAccountId?.name,
       }));
+
+      // 4. Investments & Lending Ledger for Complete Net Worth
+      const [investments, activeLoans] = await Promise.all([
+        Investment.find({ userId: user.id }).lean(),
+        LoanDebt.find({ userId: user.id, status: "active" }).lean(),
+      ]);
+
+      totalInvestmentsInPaise = investments.reduce(
+        (sum, inv) => sum + (inv.currentValueInPaise || 0),
+        0
+      );
+
+      activeLoans.forEach((loan) => {
+        if (loan.type === "lent") {
+          totalLentInPaise += loan.remainingAmountInPaise || 0;
+        } else {
+          totalBorrowedInPaise += loan.remainingAmountInPaise || 0;
+        }
+      });
     }
   } catch (err) {
     console.error("Dashboard data fetch error:", err);
   }
 
   const netCashFlowInPaise = periodIncomeInPaise - periodExpenseInPaise;
+  const netWorthInPaise =
+    totalBalanceInPaise + totalInvestmentsInPaise + totalLentInPaise - totalBorrowedInPaise;
 
   // Convert categoryMap into sorted CategoryStat[]
   const categoryStats: CategoryStat[] = Object.entries(categoryMap)
@@ -259,6 +286,48 @@ export default async function DashboardPage({ searchParams }: PageProps) {
               <Landmark className="size-4" />
               <span>Add Account</span>
             </Button>
+          </Link>
+        </div>
+      </div>
+
+      {/* Comprehensive Net Worth Banner */}
+      <div className="bg-gradient-to-r from-[#0d4f4a] via-[#0F766E] to-[#115E59] text-white rounded-xl p-5 shadow-xs flex flex-col md:flex-row md:items-center justify-between gap-4">
+        <div>
+          <span className="text-[11px] uppercase font-bold tracking-wider text-teal-200">
+            Total Net Worth
+          </span>
+          <div className="text-3xl font-extrabold tracking-tight mt-0.5">
+            {formatINR(netWorthInPaise)}
+          </div>
+          <p className="text-xs text-teal-100/80 mt-1">
+            Aggregated across bank balances, investment holdings, and net debt receivables.
+          </p>
+        </div>
+
+        <div className="flex flex-wrap items-center gap-2 sm:gap-3">
+          <Link
+            href="/accounts"
+            className="bg-white/10 hover:bg-white/20 transition-colors px-3 py-1.5 rounded-lg text-xs font-semibold backdrop-blur-xs flex items-center gap-1.5 border border-white/10"
+          >
+            <Wallet className="size-3.5 text-teal-300" />
+            <span>Bank: {formatINR(totalBalanceInPaise)}</span>
+          </Link>
+          <Link
+            href="/investments"
+            className="bg-white/10 hover:bg-white/20 transition-colors px-3 py-1.5 rounded-lg text-xs font-semibold backdrop-blur-xs flex items-center gap-1.5 border border-white/10"
+          >
+            <TrendingUp className="size-3.5 text-teal-300" />
+            <span>Investments: {formatINR(totalInvestmentsInPaise)}</span>
+          </Link>
+          <Link
+            href="/loans"
+            className="bg-white/10 hover:bg-white/20 transition-colors px-3 py-1.5 rounded-lg text-xs font-semibold backdrop-blur-xs flex items-center gap-1.5 border border-white/10"
+          >
+            <Scale className="size-3.5 text-teal-300" />
+            <span>
+              Net Debt: {totalLentInPaise >= totalBorrowedInPaise ? "+" : "-"}
+              {formatINR(Math.abs(totalLentInPaise - totalBorrowedInPaise))}
+            </span>
           </Link>
         </div>
       </div>

@@ -79,22 +79,27 @@ updated: 2026-10-19T20:00:00+05:30
 ---
 
 ### Phase 5: Lending, Borrowing, and Investments
-**Status:** 🔄 In Progress
+**Status:** ✅ Complete
 **Objective:** Track money lent/borrowed with partial repayments, plus manual investment asset tracking (mutual funds, stocks, FDs, gold).
 **Depends on:** Phase 4
 
 **Plans:**
-- [ ] Plan 5.1: Lending and borrowing data model (`LoanDebt`), server actions, and settlement calculations
-- [ ] Plan 5.2: Investment portfolio data model (`Investment`), server actions, and profit/loss valuation calculations
-- [ ] Plan 5.3: Lending & Borrowing UI (`/loans`) with person tracking, settlement modal, and status indicators
-- [ ] Plan 5.4: Investment Portfolio UI (`/investments`) with asset allocation breakdown and current valuation updates
+- [x] Plan 5.1: Lending and borrowing data model (`LoanDebt`), server actions, and settlement calculations
+- [x] Plan 5.2: Investment portfolio data model (`Investment`), server actions, and profit/loss valuation calculations
+- [x] Plan 5.3: Lending & Borrowing UI (`/loans`) with person tracking, settlement modal, and status indicators
+- [x] Plan 5.4: Investment Portfolio UI (`/investments`) with asset allocation breakdown and current valuation updates
 
 ---
 
 ### Phase 6: Reports, Settings, and Data Management
-**Status:** ⬜ Not Started
+**Status:** 🔄 In Progress
 **Objective:** Monthly/yearly financial summaries, CSV exports, custom categories, account archival, and security settings.
 **Depends on:** Phase 5
+
+**Plans:**
+- [ ] Plan 6.1: Financial reports page (`/reports`) with monthly/annual ledger statements and breakdown exports
+- [ ] Plan 6.2: CSV data export utilities for transactions, accounts, and lending data
+- [ ] Plan 6.3: User settings page (`/settings`) with profile management, preferences, and data reset options
 
 ---
 
@@ -106,5 +111,5 @@ updated: 2026-10-19T20:00:00+05:30
 | 2: Accounts & Balances | ✅ | 4/4 | 100% |
 | 3: Transactions & Income | ✅ | 5/5 | 100% |
 | 4: Dashboard & Insights | ✅ | 4/4 | 100% |
-| 5: Lending & Investments | 🔄 | 0/4 | 0% |
-| 6: Reports & Settings | ⬜ | 0/3 | 0% |
+| 5: Lending & Investments | ✅ | 4/4 | 100% |
+| 6: Reports & Settings | 🔄 | 0/3 | 0% |
