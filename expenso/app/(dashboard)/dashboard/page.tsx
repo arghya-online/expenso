@@ -17,16 +17,58 @@ import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
 import Link from "next/link";
 import { CreateTransactionDialog } from "@/components/transactions/CreateTransactionDialog";
+import { DateRangeSelector } from "@/components/dashboard/DateRangeSelector";
+import { CategoryBreakdown, CategoryStat } from "@/components/dashboard/CategoryBreakdown";
+import { SpendingTrend, TrendPoint } from "@/components/dashboard/SpendingTrend";
 
 export const instant = false;
 
-export default async function DashboardPage() {
+interface PageProps {
+  searchParams: Promise<{ range?: string }>;
+}
+
+function getDateRangeBounds(range: string) {
+  const now = new Date();
+  let startDate: Date;
+  let endDate: Date = now;
+  let label = "This Month";
+
+  if (range === "last_month") {
+    startDate = new Date(now.getFullYear(), now.getMonth() - 1, 1);
+    endDate = new Date(now.getFullYear(), now.getMonth(), 0, 23, 59, 59, 999);
+    label = "Last Month";
+  } else if (range === "30d") {
+    startDate = new Date(now.getTime() - 30 * 24 * 60 * 60 * 1000);
+    label = "Last 30 Days";
+  } else if (range === "90d") {
+    startDate = new Date(now.getTime() - 90 * 24 * 60 * 60 * 1000);
+    label = "Last 90 Days";
+  } else if (range === "this_year") {
+    startDate = new Date(now.getFullYear(), 0, 1);
+    label = "This Year";
+  } else if (range === "all") {
+    startDate = new Date(0);
+    label = "All Time";
+  } else {
+    // default: this_month
+    startDate = new Date(now.getFullYear(), now.getMonth(), 1);
+    label = "This Month";
+  }
+
+  return { startDate, endDate, label };
+}
+
+export default async function DashboardPage({ searchParams }: PageProps) {
+  const resolvedParams = await searchParams;
+  const currentRange = resolvedParams.range || "this_month";
+  const { startDate, endDate, label: dateRangeLabel } = getDateRangeBounds(currentRange);
+
   const session = await getServerSession();
   const user = session?.user;
 
   let totalBalanceInPaise = 0;
-  let totalIncomeInPaise = 0;
-  let totalExpenseInPaise = 0;
+  let periodIncomeInPaise = 0;
+  let periodExpenseInPaise = 0;
   let accountsCount = 0;
   let userAccounts: Array<{
     _id: { toString(): string };
@@ -36,6 +78,7 @@ export default async function DashboardPage() {
     maskedIdentifier?: string;
     currentBalanceInPaise: number;
   }> = [];
+
   let recentTransactions: Array<{
     _id: string;
     type: "income" | "expense" | "transfer";
@@ -48,10 +91,13 @@ export default async function DashboardPage() {
     destName?: string;
   }> = [];
 
+  const categoryMap: Record<string, { total: number; count: number }> = {};
+  const trendPoints: TrendPoint[] = [];
+
   try {
     await connectToDatabase();
     if (user?.id) {
-      // Aggregate accounts balance
+      // 1. All Active Bank Accounts
       const accounts = await BankAccount.find({
         userId: user.id,
         status: "active",
@@ -65,31 +111,66 @@ export default async function DashboardPage() {
         maskedIdentifier: acc.maskedIdentifier,
         currentBalanceInPaise: acc.currentBalanceInPaise,
       }));
+
       accountsCount = accounts.length;
       totalBalanceInPaise = accounts.reduce(
         (acc, curr) => acc + (curr.currentBalanceInPaise || 0),
         0
       );
 
-      // Current month range for income & expense
-      const startOfMonth = new Date();
-      startOfMonth.setDate(1);
-      startOfMonth.setHours(0, 0, 0, 0);
-
-      const monthlyTransactions = await Transaction.find({
+      // 2. Transactions within Selected Date Range
+      const periodTransactions = await Transaction.find({
         userId: user.id,
-        date: { $gte: startOfMonth },
+        date: { $gte: startDate, $lte: endDate },
       }).lean();
 
-      for (const t of monthlyTransactions) {
+      for (const t of periodTransactions) {
         if (t.type === "income") {
-          totalIncomeInPaise += t.amountInPaise || 0;
+          periodIncomeInPaise += t.amountInPaise || 0;
         } else if (t.type === "expense") {
-          totalExpenseInPaise += t.amountInPaise || 0;
+          const amt = t.amountInPaise || 0;
+          periodExpenseInPaise += amt;
+
+          // Aggregate category stats
+          const cat = t.category || "Other";
+          if (!categoryMap[cat]) {
+            categoryMap[cat] = { total: 0, count: 0 };
+          }
+          categoryMap[cat].total += amt;
+          categoryMap[cat].count += 1;
         }
       }
 
-      // Query recent transactions
+      // 3. Compute Spending Trend Points (7 equal chronological intervals)
+      const numPoints = 7;
+      const startMs = startDate.getTime();
+      const endMs = endDate.getTime();
+      const intervalMs = Math.max(1, (endMs - startMs) / numPoints);
+
+      for (let i = 0; i < numPoints; i++) {
+        const pStart = new Date(startMs + i * intervalMs);
+        const pEnd = new Date(startMs + (i + 1) * intervalMs);
+
+        const sumForInterval = periodTransactions
+          .filter((t) => {
+            if (t.type !== "expense") return false;
+            const d = new Date(t.date).getTime();
+            return d >= pStart.getTime() && d < pEnd.getTime();
+          })
+          .reduce((sum, t) => sum + (t.amountInPaise || 0), 0);
+
+        const pointLabel = new Intl.DateTimeFormat("en-IN", {
+          day: "numeric",
+          month: "short",
+        }).format(pStart);
+
+        trendPoints.push({
+          label: pointLabel,
+          amountInPaise: sumForInterval,
+        });
+      }
+
+      // 4. Query 5 Most Recent Transactions
       const recentDocs = await Transaction.find({ userId: user.id })
         .populate("accountId", "name accountColor")
         .populate("destinationAccountId", "name accountColor")
@@ -122,7 +203,20 @@ export default async function DashboardPage() {
     console.error("Dashboard data fetch error:", err);
   }
 
-  const netCashFlowInPaise = totalIncomeInPaise - totalExpenseInPaise;
+  const netCashFlowInPaise = periodIncomeInPaise - periodExpenseInPaise;
+
+  // Convert categoryMap into sorted CategoryStat[]
+  const categoryStats: CategoryStat[] = Object.entries(categoryMap)
+    .map(([category, stat]) => ({
+      category,
+      totalInPaise: stat.total,
+      count: stat.count,
+      percentage:
+        periodExpenseInPaise > 0
+          ? Math.round((stat.total / periodExpenseInPaise) * 100)
+          : 0,
+    }))
+    .sort((a, b) => b.totalInPaise - a.totalInPaise);
 
   const selectableAccounts = userAccounts.map((a) => ({
     _id: a._id.toString(),
@@ -133,17 +227,22 @@ export default async function DashboardPage() {
 
   return (
     <div className="space-y-6">
-      {/* Welcome Banner */}
+      {/* Welcome Banner & Controls */}
       <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 pb-2 border-b border-[#E2E8F0]">
         <div>
           <h2 className="text-xl sm:text-2xl font-bold tracking-tight text-[#0F172A]">
-            Hello, {user?.name ? user.name.split(" ")[0] : "there"} 👋
+            Financial Overview
           </h2>
           <p className="text-xs sm:text-sm text-[#64748B] mt-0.5">
-            Here is your financial summary across all tracked bank accounts.
+            Real-time financial positions, cash flow, and category analytics.
           </p>
         </div>
-        <div className="flex items-center gap-2">
+
+        <div className="flex items-center gap-2 flex-wrap">
+          {/* Date Range Selector */}
+          <DateRangeSelector currentRange={currentRange} />
+
+          {/* Quick Record Action */}
           {selectableAccounts.length > 0 ? (
             <CreateTransactionDialog accounts={selectableAccounts} />
           ) : (
@@ -154,6 +253,7 @@ export default async function DashboardPage() {
               </Button>
             </Link>
           )}
+
           <Link href="/accounts">
             <Button size="sm" variant="outline" className="border-[#E2E8F0] text-[#0F172A] gap-1.5 h-9">
               <Landmark className="size-4" />
@@ -165,11 +265,11 @@ export default async function DashboardPage() {
 
       {/* Primary KPI Metrics Grid */}
       <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
-        {/* Total Balance */}
+        {/* Total Tracked Balance */}
         <Card className="border-[#E2E8F0] shadow-2xs bg-white">
           <CardHeader className="flex flex-row items-center justify-between pb-2 space-y-0">
             <CardTitle className="text-xs font-semibold uppercase tracking-wider text-[#64748B]">
-              Tracked Balance
+              Total Tracked Balance
             </CardTitle>
             <div className="p-2 rounded-lg bg-[#CCFBF1] text-[#0F766E]">
               <Wallet className="size-4" />
@@ -185,11 +285,11 @@ export default async function DashboardPage() {
           </CardContent>
         </Card>
 
-        {/* Monthly Income */}
+        {/* Period Income */}
         <Card className="border-[#E2E8F0] shadow-2xs bg-white">
           <CardHeader className="flex flex-row items-center justify-between pb-2 space-y-0">
             <CardTitle className="text-xs font-semibold uppercase tracking-wider text-[#64748B]">
-              Monthly Income
+              Income ({dateRangeLabel})
             </CardTitle>
             <div className="p-2 rounded-lg bg-emerald-50 text-[#16A34A]">
               <ArrowDownLeft className="size-4" />
@@ -197,17 +297,17 @@ export default async function DashboardPage() {
           </CardHeader>
           <CardContent>
             <div className="text-2xl font-bold text-[#16A34A] tracking-tight">
-              {formatINR(totalIncomeInPaise)}
+              {formatINR(periodIncomeInPaise)}
             </div>
-            <p className="text-xs text-[#64748B] mt-1">Total credited this month</p>
+            <p className="text-xs text-[#64748B] mt-1">Total credited in period</p>
           </CardContent>
         </Card>
 
-        {/* Monthly Expenses */}
+        {/* Period Expenses */}
         <Card className="border-[#E2E8F0] shadow-2xs bg-white">
           <CardHeader className="flex flex-row items-center justify-between pb-2 space-y-0">
             <CardTitle className="text-xs font-semibold uppercase tracking-wider text-[#64748B]">
-              Monthly Expenses
+              Expenses ({dateRangeLabel})
             </CardTitle>
             <div className="p-2 rounded-lg bg-rose-50 text-[#E11D48]">
               <ArrowUpRight className="size-4" />
@@ -215,9 +315,9 @@ export default async function DashboardPage() {
           </CardHeader>
           <CardContent>
             <div className="text-2xl font-bold text-[#E11D48] tracking-tight">
-              {formatINR(totalExpenseInPaise)}
+              {formatINR(periodExpenseInPaise)}
             </div>
-            <p className="text-xs text-[#64748B] mt-1">Total spent this month</p>
+            <p className="text-xs text-[#64748B] mt-1">Total spent in period</p>
           </CardContent>
         </Card>
 
@@ -244,9 +344,20 @@ export default async function DashboardPage() {
         </Card>
       </div>
 
-      {/* Main Content Grid (Account Snapshot + Recent Transactions) */}
+      {/* Analytics Row: Category Breakdown + Spending Trends */}
+      <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+        <CategoryBreakdown
+          categories={categoryStats}
+          totalExpenseInPaise={periodExpenseInPaise}
+          dateRangeLabel={dateRangeLabel}
+        />
+
+        <SpendingTrend points={trendPoints} dateRangeLabel={dateRangeLabel} />
+      </div>
+
+      {/* Main Content Grid: Accounts + Recent Transactions */}
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
-        {/* Accounts Section */}
+        {/* Accounts Snapshot */}
         <Card className="lg:col-span-1 border-[#E2E8F0] shadow-2xs bg-white">
           <CardHeader className="flex flex-row items-center justify-between pb-3">
             <div>
@@ -319,7 +430,7 @@ export default async function DashboardPage() {
           </CardContent>
         </Card>
 
-        {/* Recent Transactions Section */}
+        {/* Recent Activity */}
         <Card className="lg:col-span-2 border-[#E2E8F0] shadow-2xs bg-white">
           <CardHeader className="flex flex-row items-center justify-between pb-3">
             <div>

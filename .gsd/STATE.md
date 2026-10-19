@@ -7,32 +7,28 @@ updated: 2026-10-19T21:00:00+05:30
 ## Current Position
 
 **Milestone:** v1.0 — Expenso MVP  
-**Phase:** 3 - Transactions, Expenses, and Income (Completed)  
-**Status:** Ready for Phase 4 (Dashboard and Financial Insights)  
-**Plan:** Phase 3 complete; Phase 4 planning next
+**Phase:** 5 - Lending, Borrowing, and Investments  
+**Status:** In Progress  
+**Plan:** Implementing Plan 5.1 & 5.2 (Models & Actions for Loans and Investments)
 
 ## Last Action
 
-Implemented and empirically verified Phase 3 (Transactions, Expenses, and Income):
-- Created Category & Payment Method definitions ([`EXPENSE_CATEGORIES`](file:///s:/Programming%20Base/Expenso/expenso/lib/constants/categories.ts), [`INCOME_CATEGORIES`](file:///s:/Programming%20Base/Expenso/expenso/lib/constants/categories.ts), [`PAYMENT_METHODS`](file:///s:/Programming%20Base/Expenso/expenso/lib/constants/categories.ts)).
-- Created Transaction server actions in [`expenso/lib/actions/transactions.ts`](file:///s:/Programming%20Base/Expenso/expenso/lib/actions/transactions.ts):
-  - `createTransaction`: Handles Incomes, Expenses, and inter-account Transfers with integer paise precision, atomic balance mutations on source & destination accounts, and immutable `AuditLog` records.
-  - `deleteTransaction`: Removes transaction and atomically rolls back the balance impacts on source (and destination for transfers) accounts, logging to `AuditLog`.
-- Created Transaction UI components in [`expenso/components/transactions/`](file:///s:/Programming%20Base/Expenso/expenso/components/transactions/):
-  - `CreateTransactionDialog`: Modal with tabbed selection for Expense (Rose), Income (Emerald), and Transfer (Teal), account pickers, date picker, category dropdown, payment method, amount in INR, and notes.
-  - `TransactionList`: Searchable and filterable transaction table with live search by description/merchant/category, filter by type (Expense, Income, Transfer), filter by Account, and secure delete action.
-- Built dedicated Transactions ledger page at [`expenso/app/(dashboard)/transactions/page.tsx`](file:///s:/Programming%20Base/Expenso/expenso/app/%28dashboard%29/transactions/page.tsx) with Monthly Expense, Monthly Income, Net Flow, and Total Count metric cards.
-- Integrated Recent Activity and transaction recording into [`expenso/app/(dashboard)/dashboard/page.tsx`](file:///s:/Programming%20Base/Expenso/expenso/app/%28dashboard%29/dashboard/page.tsx).
-- Validated with Next.js 16 build (`npm run build`) and ESLint (`npm run lint`) — 100% clean.
+Implemented and empirically verified Phase 4 (Dashboard and Financial Insights):
+- Created DateRangeSelector component (`components/dashboard/DateRangeSelector.tsx`) supporting This Month, Last Month, Last 90 Days, and All Time.
+- Created CategoryBreakdown component (`components/dashboard/CategoryBreakdown.tsx`) with dynamic percentage distribution, colored progress bars, and zero-state handling.
+- Created SpendingTrend bar visualizer (`components/dashboard/SpendingTrend.tsx`) calculating dynamic heights and period-specific trend buckets.
+- Integrated dashboard server page (`app/(dashboard)/dashboard/page.tsx`) with Mongoose aggregation over authenticated user transactions and bank accounts.
+- Successfully verified with clean production build (`npm run build`).
 
 ## Next Steps
 
-1. Commit Phase 3 work with atomic commit.
-2. Begin **Phase 4: Dashboard and Financial Insights**:
-   - Monthly and date-range cashflow analytics.
-   - Category breakdown charts (accessible, clean visual distribution of expenses).
-   - Spending trends comparison (daily/weekly/monthly).
-   - Quick date-range selector (This Month, Last Month, Last 90 Days, All Time).
+1. Commit Phase 4 work.
+2. Implement **Phase 5: Lending, Borrowing, and Investments**:
+   - `LoanDebt` model (person/entity, type LENT vs BORROWED, amountInPaise, remainingInPaise, dueDate, isSettled, repayments history).
+   - `Investment` model (assetName, assetType, investedAmountInPaise, currentValueInPaise, returnPercentage, notes).
+   - Server actions for creating loans, recording repayments, deleting loans, and managing investments.
+   - UI pages: `/loans` (Lending & Borrowing ledger) and `/investments` (Portfolio asset manager).
+   - Run verification and commit Phase 5.
 
 ## Active Decisions
 

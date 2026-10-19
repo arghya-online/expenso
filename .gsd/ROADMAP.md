@@ -66,16 +66,28 @@ updated: 2026-10-19T20:00:00+05:30
 ---
 
 ### Phase 4: Dashboard and Financial Insights
-**Status:** ⬜ Not Started
+**Status:** ✅ Complete
 **Objective:** Live financial dashboard calculating net worth, monthly cash flow, category breakdowns, and spending trends from real database records.
 **Depends on:** Phase 3
+
+**Plans:**
+- [x] Plan 4.1: Date range selector component with presets (This Month, Last Month, Last 90 Days, All Time)
+- [x] Plan 4.2: Visual Category breakdown with percentage shares and color-coded progress bars
+- [x] Plan 4.3: Spending trend bar chart visualization for time periods
+- [x] Plan 4.4: Main dashboard page integration with live database aggregation and recent transactions
 
 ---
 
 ### Phase 5: Lending, Borrowing, and Investments
-**Status:** ⬜ Not Started
+**Status:** 🔄 In Progress
 **Objective:** Track money lent/borrowed with partial repayments, plus manual investment asset tracking (mutual funds, stocks, FDs, gold).
 **Depends on:** Phase 4
+
+**Plans:**
+- [ ] Plan 5.1: Lending and borrowing data model (`LoanDebt`), server actions, and settlement calculations
+- [ ] Plan 5.2: Investment portfolio data model (`Investment`), server actions, and profit/loss valuation calculations
+- [ ] Plan 5.3: Lending & Borrowing UI (`/loans`) with person tracking, settlement modal, and status indicators
+- [ ] Plan 5.4: Investment Portfolio UI (`/investments`) with asset allocation breakdown and current valuation updates
 
 ---
 
@@ -90,9 +102,9 @@ updated: 2026-10-19T20:00:00+05:30
 
 | Phase | Status | Plans | Complete |
 |-------|--------|-------|----------|
-| 1: Foundation & Auth | 🔄 | 0/4 | 0% |
-| 2: Accounts & Balances | ⬜ | 0/3 | 0% |
-| 3: Transactions & Income | ⬜ | 0/4 | 0% |
-| 4: Dashboard & Insights | ⬜ | 0/3 | 0% |
-| 5: Lending & Investments | ⬜ | 0/3 | 0% |
+| 1: Foundation & Auth | ✅ | 4/4 | 100% |
+| 2: Accounts & Balances | ✅ | 4/4 | 100% |
+| 3: Transactions & Income | ✅ | 5/5 | 100% |
+| 4: Dashboard & Insights | ✅ | 4/4 | 100% |
+| 5: Lending & Investments | 🔄 | 0/4 | 0% |
 | 6: Reports & Settings | ⬜ | 0/3 | 0% |
