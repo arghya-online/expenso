@@ -1,4 +1,4 @@
-# dependencies
+# Dependencies
 node_modules/
 expenso/node_modules/
 
@@ -12,6 +12,8 @@ dist/
 # Local env files
 *.env*.local
 .env
+expenso/.env*.local
+expenso/.env
 
 # Setup repos & caches
 gravitas-native-setup/
@@ -27,3 +29,16 @@ yarn-error.log*
 # OS
 .DS_Store
 Thumbs.db
+
+# Agent skills, workflows, GSD framework & tools (everything except main app)
+.agent/
+.agents/
+.gemini/
+.gsd/
+adapters/
+docs/
+scripts/
+GSD-STYLE.md
+PROJECT_RULES.md
+model_capabilities.yaml
+skills-lock.json
