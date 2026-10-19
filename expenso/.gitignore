@@ -39,3 +39,18 @@ yarn-error.log*
 # typescript
 *.tsbuildinfo
 next-env.d.ts
+
+# Agent skills, workflows, GSD framework & tools
+.agent/
+.agents/
+.gemini/
+.gsd/
+adapters/
+docs/
+scripts/
+gravitas-native-setup/
+GSD-STYLE.md
+PROJECT_RULES.md
+model_capabilities.yaml
+skills-lock.json
+
