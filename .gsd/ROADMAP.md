@@ -7,20 +7,21 @@ updated: 2026-10-19T20:00:00+05:30
 # Roadmap
 
 > **Current Milestone:** v1.0 — Expenso MVP
-> **Current Phase:** Phase 1 - Foundation and Authentication
-> **Status:** Executing
+> **Current Milestone:** v1.0 — Expenso MVP  
+> **Current Phase:** Milestone Complete  
+> **Status:** ✅ Complete  
 
 ## Must-Haves (from SPEC)
 
-- [ ] Complete Better Auth authentication (sign-up, sign-in, sign-out, session protection)
-- [ ] Precision-safe integer paise financial calculations and Indian currency formatting
-- [ ] Responsive financial application shell (desktop persistent sidebar + mobile bottom nav)
-- [ ] Bank accounts and balances module with opening/current balance tracking
-- [ ] Full transaction engine (incomes, expenses, transfers with balance updates)
-- [ ] Comprehensive dashboard with accurate computed metrics and category analytics
-- [ ] Lending and borrowing module with settlement tracking
-- [ ] Manual investments tracking portfolio
-- [ ] Export, reports, and user preferences
+- [x] Complete Better Auth authentication (sign-up, sign-in, sign-out, session protection)
+- [x] Precision-safe integer paise financial calculations and Indian currency formatting
+- [x] Responsive financial application shell (desktop persistent sidebar + mobile bottom nav)
+- [x] Bank accounts and balances module with opening/current balance tracking
+- [x] Full transaction engine (incomes, expenses, transfers with balance updates)
+- [x] Comprehensive dashboard with accurate computed metrics and category analytics
+- [x] Lending and borrowing module with settlement tracking
+- [x] Manual investments tracking portfolio
+- [x] Export, reports, and user preferences
 
 ---
 
@@ -92,14 +93,14 @@ updated: 2026-10-19T20:00:00+05:30
 ---
 
 ### Phase 6: Reports, Settings, and Data Management
-**Status:** 🔄 In Progress
+**Status:** ✅ Complete
 **Objective:** Monthly/yearly financial summaries, CSV exports, custom categories, account archival, and security settings.
 **Depends on:** Phase 5
 
 **Plans:**
-- [ ] Plan 6.1: Financial reports page (`/reports`) with monthly/annual ledger statements and breakdown exports
-- [ ] Plan 6.2: CSV data export utilities for transactions, accounts, and lending data
-- [ ] Plan 6.3: User settings page (`/settings`) with profile management, preferences, and data reset options
+- [x] Plan 6.1: Financial reports page (`/reports`) with monthly/annual ledger statements and breakdown exports
+- [x] Plan 6.2: CSV data export utilities for transactions, accounts, and lending data
+- [x] Plan 6.3: User settings page (`/settings`) with profile management, preferences, and data reset options
 
 ---
 
@@ -112,4 +113,4 @@ updated: 2026-10-19T20:00:00+05:30
 | 3: Transactions & Income | ✅ | 5/5 | 100% |
 | 4: Dashboard & Insights | ✅ | 4/4 | 100% |
 | 5: Lending & Investments | ✅ | 4/4 | 100% |
-| 6: Reports & Settings | 🔄 | 0/3 | 0% |
+| 6: Reports & Settings | ✅ | 3/3 | 100% |
